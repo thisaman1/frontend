@@ -63,6 +63,11 @@ export const likeApi = {
     toggleVideoLike: async (videoId:string) => {        
         const response = await apiClient.get(`/likes/v/${videoId}`);
         return response.data;
+    },
+
+    toggleCommentLike: async (commentId:string) => {
+        const response = await apiClient.get(`/likes/c/${commentId}`);
+        return response.data;
     }
 }
 

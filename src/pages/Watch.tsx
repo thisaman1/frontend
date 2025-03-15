@@ -46,6 +46,7 @@ type Comment = {
   _id: string;
   content: string;
   createdAt: string;
+  likes: number;
   ownerDetails: {
     _id: string;
     userName: string;
@@ -61,6 +62,7 @@ const Watch = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalLikes, setTotalLikes] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  const [refreshComments, setRefreshComments] = useState(false);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [isLiked, setIsLiked] = useState(false);
@@ -89,6 +91,7 @@ const Watch = () => {
     fetchVideo();
   }, [videoId]);
 
+
   useEffect(() => { 
     const fetchComments = async () => {
       if(video){
@@ -99,7 +102,6 @@ const Watch = () => {
           // console.log('Fetched comments:', response.data[0]);
           setComments(response.data[0].comments);
           setTotalComments(comments.length);
-          // console.log('Total Comments:', totalComments);
         } catch (error) {
           console.error('Error fetching comments:', error);
           toast.error('Failed to load comments. Please try again later.');
@@ -107,7 +109,7 @@ const Watch = () => {
       }
     };
     fetchComments();
-  }, [video,totalComments]);
+  }, [video,refreshComments]);
 
   const handleLike = async() => {
     if (!isAuthenticated) {
@@ -128,6 +130,24 @@ const Watch = () => {
       console.error('Error adding like:', error);
       toast.error('Failed to add like. Please try again later.');
     }
+  };
+
+  const handleCommentLike = async(commentId:string) => {
+    if (!isAuthenticated) {
+      toast.error('Please sign in to like comments');
+      return;
+    }
+
+    try {
+      const response = await likeApi.toggleCommentLike(commentId);
+      setRefreshComments((prev)=> !prev);
+    }
+    catch (error) {
+      console.error('Error adding like:', error);
+      toast.error('Failed to add like. Please try again later.');
+    }
+    // In a real app, you would make an API call to update the comment like status
+    // toast.success('Liked comment');
   };
 
   const handleDislike = () => {
@@ -187,7 +207,7 @@ const Watch = () => {
       toast.error('Please enter a comment');
       return;
     }
-    
+
     const newComment = async () => {
       try {
         const response = await commentApi.addVideoComment({
@@ -197,7 +217,7 @@ const Watch = () => {
           }
         });
         // console.log('Added comment:', response);
-        setTotalComments((prev)=> prev + 1);
+        setRefreshComments((prev)=> !prev);
         // setComments([response.data.data[0], ...comments]);
         setCommentText('');
         toast.success('Comment added');
@@ -471,8 +491,9 @@ const Watch = () => {
                             <p className="mt-1">{comment.content}</p>
                             
                             <div className="flex items-center gap-2 mt-2">
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCommentLike(comment._id)}>
                                 <ThumbsUp className="h-4 w-4" />
+                                <span>{formatNumber(comment.likes)}</span>
                               </Button>
                               
                               <Button variant="ghost" size="icon" className="h-8 w-8">
