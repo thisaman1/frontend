@@ -13,6 +13,9 @@ import Upload from "./pages/Upload";
 import Search from "./pages/Search";
 import Explore from "./pages/Explore";
 import Navbar from "./components/layout/Navbar";
+import History from "./pages/History";
+import WatchLater from "./pages/WatchLater";
+import LikedVideos from "./pages/LikedVideos";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +26,6 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        
           <Navbar />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -32,10 +34,13 @@ const App = () => (
             <Route path="/upload" element={<Upload />} />
             <Route path="/search" element={<Search />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/channel" element={<Channel />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/watch-later" element={<WatchLater />} />
+            <Route path="/liked-videos" element={<LikedVideos />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        
       </TooltipProvider>
     </AuthProvider>
     </BrowserRouter>

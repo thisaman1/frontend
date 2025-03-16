@@ -60,7 +60,7 @@ const Sidebar = ({ className }: { className?: string }) => {
     },
     {
       title: 'Liked Videos',
-      href: '/liked',
+      href: '/liked-videos',
       icon: <ThumbsUp className="h-5 w-5" />,
       requiresAuth: true,
     },
