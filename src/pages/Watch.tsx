@@ -461,7 +461,7 @@ const Watch = () => {
                               </div>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-md">
-                              <AuthForms />
+                              <AuthForms onRegistrationSuccess={()=> {}}/>
                             </DialogContent>
                           </Dialog>
                         )}

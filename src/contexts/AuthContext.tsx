@@ -10,6 +10,7 @@ type User = {
   email: string;
   channelName?: string;
   avatar?: string;
+  coverImage?: string;
 };
 
 type AuthContextType = {

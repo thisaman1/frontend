@@ -85,14 +85,14 @@ const MyChannel = () => {
                 <Video className="h-4 w-4" />
                 Upload
               </Button>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={()=> navigate('/settings')}>
                 <Pencil className="h-4 w-4" />
                 Edit Channel
               </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate('/settings')}>
+              {/* <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate('/settings')}>
                 <Settings className="h-4 w-4" />
                 Settings
-              </Button>
+              </Button> */}
             </div>
           </div>
           

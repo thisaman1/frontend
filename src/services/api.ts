@@ -12,8 +12,8 @@ export const userApi= {
         return response.data;
     },
     
-    updateProfile: async (data: any) => {
-        const response = await apiClient.post(`/users/profile`, data);
+    updateProfile: async (data: FormData, options:any) => {
+        const response = await apiClient.post(`/users/update`, data, options);
         return response.data;
     },
 
@@ -21,6 +21,19 @@ export const userApi= {
         const response = await apiClient.get('/users/get-current-user');
         return response.data;
     },
+
+    updateAvatar: async (data: FormData, options: any) => {
+        const response = await apiClient.post('/users/avatar', data, options);
+        // console.log(response);
+        return response.data;
+    },
+
+    updateCover: async (data: FormData, options: any) => {
+        const response = await apiClient.post('/users/coverimage', data, options);
+        return response.data;
+    },
+
+    
 
     login: async (email: string, password: string) => {
         const response = await apiClient.post('/users/login', { email, password });

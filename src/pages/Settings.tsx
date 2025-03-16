@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useRef, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -15,13 +15,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Upload, User, Bell, Shield, LogOut } from 'lucide-react';
 import { toast } from "sonner";
+import { userApi } from '@/services/api';
 
 const profileFormSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters.'),
+  fullName: z.string().min(3, 'Full Name must be at least 3 characters.'),
   email: z.string().email('Please enter a valid email address.'),
-  bio: z.string().max(160, 'Bio must not be longer than 160 characters.').optional(),
-  avatar: z.any().optional(),
-  coverImage: z.any().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -38,7 +36,8 @@ const notificationFormSchema = z.object({
 type NotificationFormValues = z.infer<typeof notificationFormSchema>;
 
 const Settings = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const [user, setUser] = useState<any>(useAuth().user);
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState('profile');
 
@@ -52,9 +51,8 @@ const Settings = () => {
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      username: user?.userName || '',
+      fullName: user?.fullName || '',
       email: user?.email || '',
-      bio: '',
     },
   });
 
@@ -70,9 +68,36 @@ const Settings = () => {
     },
   });
 
-  const onProfileSubmit = (data: ProfileFormValues) => {
+  const onProfileSubmit = async(data: ProfileFormValues) => {
+    console.log("Entered data:", data);
     toast.success('Profile updated successfully');
     // Implement profile update API call
+    const profileData = new FormData();
+    profileData.append('fullName', data.fullName);
+    profileData.append('email', data.email);
+
+    try { 
+      const response = await userApi.updateProfile(profileData,{
+        headers:{
+          'content-type': 'application/json',
+        }
+      });
+      console.log(response);
+      setUser((prevUser) => ({
+        ...prevUser,
+        fullName: response.data.fullName,
+        email: response.data.email,
+      }));
+      navigate('/settings');
+    }
+    catch (error) {
+      console.error('Profile update failed:', error);
+      toast.error('Profile update failed. Please try again.');
+      return;
+    }
+    finally {
+      toast.success('Profile updated successfully');
+    } 
   };
 
   const onNotificationSubmit = (data: NotificationFormValues) => {
@@ -85,9 +110,81 @@ const Settings = () => {
     navigate('/');
   };
 
+  const handleAvatarChange = async(event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // console.log("Selected file:", file);
+      // Handle file upload logic here (e.g., send to backend or update state)
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      try {
+        const response = await userApi.updateAvatar(formData, {
+          headers: {
+            'content-type': 'multipart/form-data',
+          },
+        });
+        
+        setUser((prevUser) => ({
+          ...prevUser,
+          avatar: response.data.avatar, // Ensure this matches the API response
+        }));
+
+        navigate('/settings');
+      } catch (error) {
+        console.error('Avatar upload failed:', error);
+        toast.error('Avatar upload failed. Please try again.');
+        return;
+      }
+      finally {
+        toast.success('Avatar updated successfully');
+      }
+      
+    }
+  };
+
+  const handleCoverChange = async(event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // console.log("Selected file:", file);
+      // Handle file upload logic here (e.g., send to backend or update state)
+      const formData = new FormData();
+      formData.append('coverImage', file);
+      
+      try {
+        const response = await userApi.updateCover(formData, {
+          headers: {
+            'content-type': 'multipart/form-data',
+          },
+        });
+
+        setUser((prevUser) => ({
+          ...prevUser,
+          coverImage: response.data.coverImage, // Ensure this matches the API response
+        }));
+        navigate('/settings');
+      } catch (error) {
+        console.error('Cover image upload failed:', error);
+        toast.error('Cover image upload failed. Please try again.');
+        return;
+      }
+      finally {
+        toast.success('Cover image updated successfully');
+      }
+    }
+  };
+
+  const handlePasswordChange = async() => {
+    // Implement password change logic here
+    toast.error('Password change is not implemented');
+  };
+
   if (!isAuthenticated) {
     return null;
   }
+
+  const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
   return (
     <div className="container mx-auto p-4">
@@ -103,6 +200,55 @@ const Settings = () => {
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
+          <div className="flex items-center gap-4">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={user?.avatar?.[0]} />
+                <AvatarFallback className="text-xl">
+                  {user?.userName?.charAt(0)?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <input 
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={avatarInputRef}
+                onChange={handleAvatarChange}
+              />
+              <div>
+                <Button variant="outline" size="sm" className="gap-2 mb-2" onClick={() => avatarInputRef.current?.click()}>
+                  <Upload className="h-4 w-4" />
+                  Change Avatar
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  JPEG, PNG or WebP, max 2MB
+                </p>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2">Cover Image</h3>
+              <div 
+                className="h-32 w-full rounded-lg bg-cover bg-center bg-muted flex items-center justify-center relative group"
+                style={{ 
+                  backgroundImage: `url(${user?.coverImage?.[0] || ''})`,
+                  backgroundColor: user?.coverImage?.[0] ? undefined : 'hsl(var(--muted))'
+                }}
+              >
+                <input 
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={coverInputRef}
+                onChange={handleCoverChange}
+              />
+                {user?.coverImage?.[0] && (
+                  <Button variant="outline" size="sm" className="absolute bottom-2 right-2 flex items-center gap-2 bg-white bg-opacity-80 hover:bg-opacity-100 transition opacity-0 group-hover:opacity-100" onClick={() => coverInputRef.current?.click()}>
+                    <Upload className="h-4 w-4" />
+                    Change Cover Image
+                  </Button>
+                )}
+              </div>
+            </div>
             <Form {...profileForm}>
               <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-8">
                 <Card>
@@ -113,53 +259,16 @@ const Settings = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-20 w-20">
-                        <AvatarImage src={user?.avatar?.[0]} />
-                        <AvatarFallback className="text-xl">
-                          {user?.userName?.charAt(0)?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div>
-                        <Button variant="outline" size="sm" className="gap-2 mb-2">
-                          <Upload className="h-4 w-4" />
-                          Change Avatar
-                        </Button>
-                        <p className="text-xs text-muted-foreground">
-                          JPEG, PNG or WebP, max 2MB
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Cover Image</h3>
-                      <div 
-                        className="h-32 w-full rounded-lg bg-cover bg-center bg-muted flex items-center justify-center"
-                        style={{ 
-                          backgroundImage: `url(${user?.coverImage?.[0] || ''})`,
-                          backgroundColor: user?.coverImage?.[0] ? undefined : 'hsl(var(--muted))'
-                        }}
-                      >
-                        {!user?.coverImage?.[0] && (
-                          <Button variant="outline" size="sm" className="gap-2">
-                            <Upload className="h-4 w-4" />
-                            Upload Cover Image
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
                     <Separator />
                     
                     <FormField
                       control={profileForm.control}
-                      name="username"
+                      name="fullName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel>Full Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Username" {...field} />
+                            <Input placeholder="Fullname" {...field} />
                           </FormControl>
                           <FormDescription>
                             This is your public display name
@@ -180,27 +289,6 @@ const Settings = () => {
                           </FormControl>
                           <FormDescription>
                             Your email address is not shared publicly
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={profileForm.control}
-                      name="bio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bio</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Tell us about yourself"
-                              className="resize-none" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Brief description for your profile. Max 160 characters.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -425,7 +513,7 @@ const Settings = () => {
                         Update your password and secure your account
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" className="ml-auto">
+                    <Button variant="outline" size="sm" className="ml-auto" onClick={handlePasswordChange}>
                       Update
                     </Button>
                   </div>
