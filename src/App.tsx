@@ -16,6 +16,7 @@ import Navbar from "./components/layout/Navbar";
 import History from "./pages/History";
 import WatchLater from "./pages/WatchLater";
 import LikedVideos from "./pages/LikedVideos";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/history" element={<History />} />
             <Route path="/watch-later" element={<WatchLater />} />
             <Route path="/liked-videos" element={<LikedVideos />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

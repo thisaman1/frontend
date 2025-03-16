@@ -61,7 +61,7 @@ const Watch = () => {
   const [relatedVideos, setRelatedVideos] = useState<VideoCardProps[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalLikes, setTotalLikes] = useState(0);
-  const [totalComments, setTotalComments] = useState(0);
+  const [subscribers, setSubscribers] = useState(0);
   const [refreshComments, setRefreshComments] = useState(false);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
@@ -80,6 +80,7 @@ const Watch = () => {
         const response = await videoApi.getVideoById(videoId);
         setVideo(response.data[0]);
         setTotalLikes(response.data[0].likesCount);
+        setSubscribers(response.data[0].subscribersCount);
       } catch (error) {
         console.error('Error fetching video:', error);
         toast.error('Failed to load video. Please try again later.');
@@ -101,7 +102,7 @@ const Watch = () => {
           });
           // console.log('Fetched comments:', response.data[0]);
           setComments(response.data[0].comments);
-          setTotalComments(comments.length);
+          // setTotalComments(comments.length);
         } catch (error) {
           console.error('Error fetching comments:', error);
           toast.error('Failed to load comments. Please try again later.');
@@ -190,7 +191,7 @@ const Watch = () => {
     }
     
     setIsSubscribed(!isSubscribed);
-    
+    setSubscribers((prev)=> isSubscribed ? prev - 1 : prev + 1);
     // In a real app, you would make an API call to update the subscription status
     toast.success(isSubscribed ? 'Unsubscribed from channel' : 'Subscribed to channel');
   };
@@ -317,7 +318,7 @@ const Watch = () => {
                   
                   <div>
                     <h3 className="font-medium">{video.ownerDetails.userName || video.ownerDetails.userName}</h3>
-                    <p className="text-sm text-muted-foreground">{formatNumber(video.subscribersCount)} subscribers</p>
+                    <p className="text-sm text-muted-foreground">{formatNumber(subscribers)} subscribers</p>
                   </div>
                 </Link>
                 

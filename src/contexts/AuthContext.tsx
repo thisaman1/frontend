@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           const response = await userApi.getCurrentUser();
-          console.log(response);
+          // console.log(response);
           setUser(response.data);
         } catch (error) {
           console.error('Authentication check failed:', error);
