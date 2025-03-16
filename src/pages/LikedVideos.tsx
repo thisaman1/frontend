@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { videoApi } from '@/services/api';
+import { likeApi, videoApi } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp } from 'lucide-react';
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ const LikedVideos = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ['likedVideos'],
-    queryFn: () => videoApi.getVideos({ liked: true }),
+    queryFn: () => likeApi.getAllLikedVideos(),
     enabled: isAuthenticated,
   });
 
@@ -31,6 +31,8 @@ const LikedVideos = () => {
   if (!isAuthenticated) {
     return null;
   }
+  // console.log(data);
+  // console.log(videos);
 
   return (
     <div className="container mx-auto p-4">
@@ -61,6 +63,7 @@ const LikedVideos = () => {
         ) : videos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {videos.map((video: any) => (
+              // console.log(video),
               <VideoCard key={video._id} {...video} />
             ))}
           </div>

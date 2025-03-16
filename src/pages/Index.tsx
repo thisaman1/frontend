@@ -65,7 +65,7 @@ const Index = () => {
   return (
     <div className="flex">
       <div className="hidden md:block">
-        <Sidebar />
+        {/* <Sidebar /> */}
       </div>
       <main className="flex-1 min-h-screen p-4 md:p-6">
         <div className="mb-6">

@@ -29,6 +29,7 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -46,6 +47,8 @@ const Navbar = () => {
       .toUpperCase()
       .substring(0, 2);
   };
+
+  const closeDialog = () => setIsDialogOpen(false);
 
   return (
     <header className="bg-background sticky top-0 z-50 w-full border-b shadow-sm">
@@ -131,8 +134,8 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar} alt={user?.username} />
-                      <AvatarFallback>{user?.username ? getInitials(user.username) : 'U'}</AvatarFallback>
+                      <AvatarImage src={user?.avatar[0]} alt={user?.userName} />
+                      <AvatarFallback>{user?.userName ? getInitials(user.userName) : 'U'}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -163,14 +166,14 @@ const Navbar = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="rounded-full" size="sm">
+                <Button className="rounded-full" size="sm" onClick={() => setIsDialogOpen(true)}>
                   Sign in
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
-                <AuthForms />
+                <AuthForms onRegistrationSuccess={closeDialog}/>
               </DialogContent>
             </Dialog>
           )}

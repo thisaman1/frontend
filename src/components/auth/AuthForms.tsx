@@ -8,7 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export const AuthForms = ({}) => {
+interface AuthFormsProps {
+  onRegistrationSuccess: () => void; // Callback to close the dialog
+}
+export const AuthForms: React.FC<AuthFormsProps> = ({onRegistrationSuccess}) => {
   const navigate = useNavigate();
   const { login, register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -22,10 +25,13 @@ export const AuthForms = ({}) => {
 
   // Register form state
   const [registerData, setRegisterData] = useState({
-    username: '',
+    userName: '',
     email: '',
+    fullName: '',
     password: '',
     confirmPassword: '',
+    avatar:null,
+    coverImage:null,
   });
 
   // Form validation states
@@ -40,7 +46,22 @@ export const AuthForms = ({}) => {
   };
 
   const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+    // setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+
+    if (files) {
+      // For file inputs, save the file object (don't try to modify the value)
+      setRegisterData((prevData) => ({
+        ...prevData,
+        [name]: files[0], // Only save the first file if multiple files are allowed
+      }));
+    } else {
+      // For text inputs, save the value
+      setRegisterData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
     // Clear error when user types
     if (errors[e.target.name]) {
       setErrors({ ...errors, [e.target.name]: '' });
@@ -67,8 +88,8 @@ export const AuthForms = ({}) => {
   const validateRegisterForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!registerData.username.trim()) {
-      newErrors.username = 'Username is required';
+    if (!registerData.userName.trim()) {
+      newErrors.userName = 'Username is required';
     }
     
     if (!registerData.email.trim()) {
@@ -87,6 +108,14 @@ export const AuthForms = ({}) => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
     
+    if (!registerData.fullName.trim()) {
+      newErrors.fullName = 'Full Name is required';
+    }
+
+    if (!registerData.avatar) {
+      newErrors.avatar = 'Avatar is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -113,9 +142,25 @@ export const AuthForms = ({}) => {
     
     if (!validateRegisterForm()) return;
     
+    const formData = new FormData();
+    formData.append("userName", registerData.userName);
+    formData.append("email", registerData.email);
+    formData.append("password", registerData.password);
+    formData.append("confirmPassword", registerData.confirmPassword);
+    formData.append("fullName", registerData.fullName);
+    if (registerData.avatar) {
+      formData.append("avatar", registerData.avatar); // Ensure file is appended properly
+    }
+    if (registerData.coverImage) {
+      formData.append("coverImage", registerData.coverImage);
+    }
+
     setIsLoading(true);
     try {
-      await register(registerData.username, registerData.email, registerData.password);
+      await register(formData);
+      console.log("Registration successful, navigating to home...");
+      onRegistrationSuccess();
+      // navigate('/');
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
@@ -136,7 +181,7 @@ export const AuthForms = ({}) => {
           <TabsTrigger value="register">Register</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="login">
+        <TabsContent value="login" className="max-h-[500px] overflow-y-auto">
           <Card>
             <CardHeader>
               <CardTitle>Login</CardTitle>
@@ -189,7 +234,7 @@ export const AuthForms = ({}) => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="register">
+        <TabsContent value="register" className="max-h-[500px] overflow-y-auto">
           <Card>
             <CardHeader>
               <CardTitle>Create an account</CardTitle>
@@ -200,17 +245,16 @@ export const AuthForms = ({}) => {
             <form onSubmit={handleRegisterSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="userName">Username</Label>
                   <Input
                     id="username"
-                    name="username"
-                    placeholder="johndoe"
-                    value={registerData.username}
+                    name="userName"
+                    value={registerData.userName}
                     onChange={handleRegisterChange}
-                    className={errors.username ? 'border-destructive' : ''}
+                    className={errors.userName ? 'border-destructive' : ''}
                   />
-                  {errors.username && (
-                    <p className="text-sm text-destructive">{errors.username}</p>
+                  {errors.userName && (
+                    <p className="text-sm text-destructive">{errors.userName}</p>
                   )}
                 </div>
                 
@@ -257,6 +301,50 @@ export const AuthForms = ({}) => {
                   />
                   {errors.confirmPassword && (
                     <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="full-name"
+                    name="fullName"
+                    value={registerData.fullName}
+                    onChange={handleRegisterChange}
+                    className={errors.fullName ? 'border-destructive' : ''}
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-destructive">{errors.fullName}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="avatar">Avatar Image</Label>
+                  <Input
+                    id="avatar"
+                    name="avatar"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleRegisterChange}
+                    className={errors.avatar ? 'border-destructive' : ''}
+                  />
+                  {errors.avatar && (
+                    <p className="text-sm text-destructive">{errors.avatar}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cover-image">Cover Image</Label>
+                  <Input
+                    id="cover-image"
+                    name="coverImage"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleRegisterChange}
+                    className={errors.coverImage ? 'border-destructive' : ''}
+                  />
+                  {errors.coverImage && (
+                    <p className="text-sm text-destructive">{errors.coverImage}</p>
                   )}
                 </div>
               </CardContent>

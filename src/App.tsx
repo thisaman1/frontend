@@ -17,7 +17,7 @@ import History from "./pages/History";
 import WatchLater from "./pages/WatchLater";
 import LikedVideos from "./pages/LikedVideos";
 import Settings from "./pages/Settings";
-
+import Layout from "./pages/Layout";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,9 +27,10 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-          <Navbar />
+          {/* <Navbar /> */}
           <Routes>
-            <Route path="/" element={<Index />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Index />} />
             <Route path="/watch/:videoId" element={<Watch />} />
             <Route path="/channel/:channelId" element={<Channel />} />
             <Route path="/upload" element={<Upload />} />
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
+          </Route>
           </Routes>
       </TooltipProvider>
     </AuthProvider>

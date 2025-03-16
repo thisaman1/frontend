@@ -17,7 +17,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  register: (formdata: FormData) => Promise<void>;
   logout: () => void;
 };
 
@@ -64,10 +64,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (formdata) => {
     try {
       setIsLoading(true);
-      const response = await userApi.register(username, email, password );
+      const response = await userApi.register(formdata,{
+        headers: {
+          "Content-Type": "multipart/form-data", // This tells the server to handle file uploads
+        },
+      });
       const { token, user } = response.data;
       
       localStorage.setItem('token', token);

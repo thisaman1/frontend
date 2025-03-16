@@ -32,7 +32,7 @@ const MyChannel = () => {
 
   const { data: videos, isLoading: isVideosLoading } = useQuery({
     queryKey: ['channelVideos', user?._id],
-    queryFn: () => videoApi.getVideos({ owner: user?._id }),
+    queryFn: () => videoApi.getVideos({ userId: user?._id }),
     enabled: !!user?._id && isAuthenticated,
   });
 

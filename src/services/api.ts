@@ -27,8 +27,11 @@ export const userApi= {
         return response.data;
     },
 
-    register: async(username: string, email: string, password: string) => {
-        const response = await apiClient.post('/users/register', { username, email, password });
+    register: async(formdata: FormData,options:any) => {
+        console.log(formdata);
+        console.log(options);
+        const response = await apiClient.post('/users/register', formdata, options);
+        console.log(response);
         return response.data;
     }
 }
@@ -40,7 +43,8 @@ export const videoApi = {
     },
 
     getVideos: async (params:any) => {
-        const response = await apiClient.get('/videos/', params);
+        // console.log(params);
+        const response = await apiClient.get('/videos/', {params});
         return response.data;
     }
 }
@@ -67,6 +71,11 @@ export const likeApi = {
 
     toggleCommentLike: async (commentId:string) => {
         const response = await apiClient.get(`/likes/c/${commentId}`);
+        return response.data;
+    },
+
+    getAllLikedVideos: async () => {
+        const response = await apiClient.get('/likes/');
         return response.data;
     }
 }

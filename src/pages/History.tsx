@@ -32,7 +32,7 @@ const History = () => {
   if (!isAuthenticated) {
     return null;
   }
-console.log(videos);
+// console.log(videos);
   // Group videos by date
   const groupedVideos = videos.reduce((acc: Record<string, any[]>, video: any) => {
     const date = new Date(video.watchedAt || video.createdAt).toDateString();
