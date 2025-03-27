@@ -35,16 +35,17 @@ const formatViews = (count: number): string => {
 
 // Format duration (seconds to MM:SS)
 const formatDuration = (seconds: number): string => {
+  seconds = Math.floor(seconds);
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return `${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${hours}.${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2,'0')}`;
   }
   
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${remainingSeconds.toString().padStart(2,'0')}`;
 };
 
 export const VideoCard: React.FC<VideoCardProps> = ({

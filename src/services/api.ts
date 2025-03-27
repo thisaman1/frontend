@@ -59,6 +59,11 @@ export const videoApi = {
         // console.log(params);
         const response = await apiClient.get('/videos/', {params});
         return response.data;
+    },
+
+    uploadVideo: async(data: FormData, options:any) => {
+        const response = await apiClient.post('/videos/upload', data, options);
+        return response.data;
     }
 }
 

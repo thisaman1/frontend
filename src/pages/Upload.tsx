@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload as UploadIcon, X, FileVideo, CheckCircle2 } from 'lucide-react';
 import { toast } from "sonner";
+import { videoApi } from '@/services/api';
+import { log } from 'node:console';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
@@ -22,7 +24,6 @@ const formSchema = z.object({
   thumbnail: z.any().refine((file) => file instanceof File, {
     message: 'Thumbnail is required',
   }),
-  category: z.string().min(1, 'Please select a category'),
 });
 
 const categories = [
@@ -37,7 +38,7 @@ const categories = [
 ];
 
 const Upload = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated,user } = useAuth();
   const navigate = useNavigate();
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -48,11 +49,15 @@ const Upload = () => {
     defaultValues: {
       title: '',
       description: '',
-      category: '',
+      videoFile: null,
+      thumbnail: null,
     },
   });
 
   React.useEffect(() => {
+    // console.log(isAuthenticated);
+    // console.log(user);
+    
     if (!isAuthenticated) {
       navigate('/');
       toast.error('You need to be logged in to upload videos');
@@ -108,13 +113,17 @@ const Upload = () => {
       formData.append('description', values.description);
       formData.append('videoFile', values.videoFile);
       formData.append('thumbnail', values.thumbnail);
-      formData.append('category', values.category);
       
       // Simulate API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await videoApi.uploadVideo(formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      // await new Promise(resolve => setTimeout(resolve, 2000));
+      // log(isAuthenticated)
       toast.success('Video uploaded successfully!');
-      navigate('/mychannel');
+      navigate(`/channel/${user._id}`);
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Failed to upload video. Please try again.');
@@ -287,7 +296,7 @@ const Upload = () => {
                     )}
                   />
                   
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="category"
                     render={({ field }) => (
@@ -316,7 +325,7 @@ const Upload = () => {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
                 </div>
               </CardContent>
             </Card>
