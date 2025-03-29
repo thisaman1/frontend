@@ -78,6 +78,24 @@ export const commentApi = {
         const params = parameter.params;
         const response = await apiClient.post(`/comments/v/${params.videoId}`, params);
         return response.data;
+    },
+
+    addReplyOnComment: async(parameter: any)=>{
+        const params = parameter.params;
+        const response = await apiClient.post(`/comments/c/${params.commentId}`,params);
+        return response.data;
+    },
+
+    getCommentReplies: async(parameter: any)=>{
+        const params = parameter.params;
+        const response = await apiClient.get(`/comments/comments/${params.commentId}`,params);
+        return response.data;
+    },
+
+    getCommentById: async(parameter: any)=>{
+        const params = parameter.params;
+        const response = await apiClient.get(`/comments/comment-by-id/${params.commentId}`,params);
+        return response.data;
     }
 }
 

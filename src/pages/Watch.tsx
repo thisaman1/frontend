@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow, set } from 'date-fns';
 import { toast } from "sonner";
+import { CommentItem } from '@/components/CommentItem';
 import { 
   ThumbsUp, 
   ThumbsDown, 
@@ -47,6 +48,7 @@ type Comment = {
   content: string;
   createdAt: string;
   likes: number;
+  replies: number;
   ownerDetails: {
     _id: string;
     userName: string;
@@ -59,14 +61,21 @@ const Watch = () => {
   const { isAuthenticated, user } = useAuth();
   const [video, setVideo] = useState<Video | null>(null);
   const [relatedVideos, setRelatedVideos] = useState<VideoCardProps[]>([]);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [totalLikes, setTotalLikes] = useState(0);
+  
   const [subscribers, setSubscribers] = useState(0);
   const [refreshComments, setRefreshComments] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
+  const [replies, setReplies] = useState({}); 
+  const [replyText, setReplyText] = useState('');
+  const [activeReplyId, setActiveReplyId] = useState(null);
+
   const [isLiked, setIsLiked] = useState(false);
+  const [totalLikes, setTotalLikes] = useState(0);
   const [isDisliked, setIsDisliked] = useState(false);
+
   const [isSaved, setIsSaved] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [activeTab, setActiveTab] = useState('about');
@@ -232,6 +241,97 @@ const Watch = () => {
 
   };
 
+  const handleSubmitReply = async (commentId: string, replyText: string) => {
+      // console.log("here");
+      // e.preventDefault();
+      // console.log(e.target);
+      if(!isAuthenticated){
+        toast.error('Please sign in to reply');
+        return;
+      }
+      try {
+        // Replace with your API call
+        const response = await commentApi.addReplyOnComment({
+          params:{
+            commentId: activeReplyId,
+            content: replyText,
+          }
+        });
+        
+        
+        
+        const newReply = await commentApi.getCommentById({
+          params:{
+            commentId:response.data._id
+          }
+        })
+        const comment = newReply.data[0];
+
+        setReplies(prev => ({
+          ...prev,
+          [commentId]: {
+            ...prev[commentId],
+            comments: [comment, ...(prev[commentId]?.comments || [])]
+          }
+        }));
+        // console.log(newReply);
+        setReplyText('');
+        toast.success('Comment Reply added');
+        setRefreshComments((prev)=> !prev);
+      //   Update comments state (adapt based on your state management)
+      //   setComments(prev => prev.map(comment => 
+      //     comment._id === activeReplyId
+      //       ? { ...comment, replies: [...comment.replies, newReply] } 
+      //       : comment
+      //   ));
+      } catch (error) {
+        console.error("Failed to post reply:", error);
+        toast.error('Failed to add Reply. Please try again later.');
+      }
+  };
+
+  const onFetchReplies = async (commentId) => {
+    try {
+      setReplies(prev => ({
+        ...prev,
+        [commentId]: {
+          ...prev[commentId],
+          loading: true,
+          error: null
+        }
+      }));
+  
+      const response = await commentApi.getCommentReplies({
+        params: { commentId }
+      });
+  
+      setReplies(prev => ({
+        ...prev,
+        [commentId]: {
+          ...prev[commentId],
+          loading: false,
+          open: !prev[commentId]?.open, // Toggle visibility
+          comments: response.data,
+          error: null
+        }
+      }));
+
+      setRefreshComments((prev)=> !prev);
+    } catch (error) {
+      setReplies(prev => ({
+        ...prev,
+        [commentId]: {
+          ...prev[commentId],
+          loading: false,
+          error: error.message
+        }
+      }));
+    }
+  };
+
+
+  
+
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
       return `${(num / 1000000).toFixed(1)}M`;
@@ -295,6 +395,8 @@ const Watch = () => {
     );
   }
 
+  // console.log(comments);
+  
   return (
     <div className="container max-w-screen-2xl mx-auto px-4 py-6">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -471,42 +573,16 @@ const Watch = () => {
                     {/* Comments list */}
                     <div className="space-y-6">
                       {comments.map((comment) => (
-                        <div key={comment._id} className="flex gap-4">
-                          <Link to={`/channel/${comment.ownerDetails._id}`}>
-                            <Avatar className="h-10 w-10 flex-shrink-0">
-                              <AvatarImage src={comment.ownerDetails.avatar[0]} alt={comment.ownerDetails.userName} />
-                              <AvatarFallback>{comment.ownerDetails.userName.charAt(0).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                          </Link>
-                          
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <Link to={`/channel/${comment.ownerDetails._id}`} className="font-medium hover:underline">
-                                {comment.ownerDetails.userName}
-                              </Link>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                              </span>
-                            </div>
-                            
-                            <p className="mt-1">{comment.content}</p>
-                            
-                            <div className="flex items-center gap-2 mt-2">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCommentLike(comment._id)}>
-                                <ThumbsUp className="h-4 w-4" />
-                                <span>{formatNumber(comment.likes)}</span>
-                              </Button>
-                              
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <ThumbsDown className="h-4 w-4" />
-                              </Button>
-                              
-                              <Button variant="ghost" size="sm" className="h-8">
-                                Reply
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                        <CommentItem
+                        key={comment._id}
+                        comment={comment}
+                        replies={replies}
+                        onFetchReplies={onFetchReplies}
+                        onSubmitReply={handleSubmitReply}
+                        activeReplyId={activeReplyId}
+                        setActiveReplyId={setActiveReplyId}
+                        depth={0}
+                      />
                       ))}
                     </div>
                   </div>
